@@ -1,0 +1,26 @@
+
+GET http://localhost:3000/ping
+token: first_user
+
+###
+
+
+#GET http://localhost:3000/tasks
+###
+
+GET http://localhost:3000/tasks/check
+###
+
+
+GET http://localhost:3000/tasks/cyclic
+###
+
+
+GET http://localhost:3000/tasks/search
+###
+
+
+GET http://localhost:3000/tasks/wonderful
+###
+
+
