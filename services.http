@@ -1,12 +1,11 @@
 
 GET http://localhost:3000/ping
-token: first_user
-
 ###
 
 
-#GET http://localhost:3000/tasks
+GET http://localhost:3000/tasks
 ###
+
 
 GET http://localhost:3000/tasks/check
 ###
