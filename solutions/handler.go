@@ -27,27 +27,37 @@ func (s *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// ctx = common.WithUserToken(ctx, r.Header.Get(common.TokenHeaderName))
 
 	fmt.Println("request: ", r.Method, r.URL)
+
+	if r.URL.Path == "/tasks/solution" {
+		res := DataRequest(CheckTask)
+		_, err := w.Write([]byte(res))
+		panicIfError(err)
+		w.WriteHeader(http.StatusAccepted)
+		return
+	}
+
 	if r.URL.Path == "/ping" {
 		w.WriteHeader(http.StatusOK)
 		_, err := w.Write([]byte("pong"))
 		panicIfError(err)
 		return
 	}
+
 	if r.URL.Path == "/tasks" {
 		w.WriteHeader(http.StatusOK)
-		res := DataRequest(CheckTask)
+		res := DataResponse(CheckTask)
 		_, err := w.Write([]byte(res))
 		panicIfError(err)
 		printToConsole(res)
-		res = DataRequest(CyclicTask)
+		res = DataResponse(CyclicTask)
 		_, err = w.Write([]byte(res))
 		panicIfError(err)
 		printToConsole(res)
-		res = DataRequest(SearchTask)
+		res = DataResponse(SearchTask)
 		_, err = w.Write([]byte(res))
 		panicIfError(err)
 		printToConsole(res)
-		res = DataRequest(WonderfulTask)
+		res = DataResponse(WonderfulTask)
 		_, err = w.Write([]byte(res))
 		panicIfError(err)
 		printToConsole(res)
@@ -55,7 +65,7 @@ func (s *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.URL.Path == "/tasks/check" {
 		w.WriteHeader(http.StatusOK)
-		res := DataRequest(CheckTask)
+		res := DataResponse(CheckTask)
 		_, err := w.Write([]byte(res))
 		panicIfError(err)
 		printToConsole(res)
@@ -63,7 +73,7 @@ func (s *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.URL.Path == "/tasks/cyclic" {
 		w.WriteHeader(http.StatusOK)
-		res := DataRequest(CyclicTask)
+		res := DataResponse(CyclicTask)
 		_, err := w.Write([]byte(res))
 		panicIfError(err)
 		printToConsole(res)
@@ -71,7 +81,7 @@ func (s *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.URL.Path == "/tasks/search" {
 		w.WriteHeader(http.StatusOK)
-		res := DataRequest(SearchTask)
+		res := DataResponse(SearchTask)
 		_, err := w.Write([]byte(res))
 		panicIfError(err)
 		printToConsole(res)
@@ -79,7 +89,7 @@ func (s *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if r.URL.Path == "/tasks/wonderful" {
 		w.WriteHeader(http.StatusOK)
-		res := DataRequest(WonderfulTask)
+		res := DataResponse(WonderfulTask)
 		_, err := w.Write([]byte(res))
 		panicIfError(err)
 		printToConsole(res)
@@ -140,16 +150,52 @@ func GetResult(numberTask Task) ([]int, [][]int) {
 
 func DataRequest(numberTask Task) []byte {
 	result, A := GetResult(numberTask)
-	Res := Results{
+	res := Results{
 		Payload: A,
 		Results: result,
 	}
 	Req := Request{
 		UserName: "alexey4",
 		Task:     namesTask[numberTask],
-		Results:  Res,
+		Results:  res,
 	}
 	request, err := json.Marshal(Req)
+	panicIfError(err)
+	return request
+}
+
+func DataResponse(numberTask Task) []byte {
+	data := GetData(numberTask)
+	result, _ := GetResult(numberTask)
+	count := 0
+	var failArray []Fail
+	var dataRes []int
+	for _, value := range data.Res {
+		for _, val := range value {
+			dataRes = append(dataRes, val)
+		}
+	}
+	fmt.Println(dataRes)
+	for i, value := range result {
+		fail := Fail{
+			OriginalResult: dataRes[i],
+			ExternalResult: value,
+		}
+		if value == dataRes[i] {
+			count++
+		}
+		failArray = append(failArray, fail)
+	}
+	if len(result) == 0 {
+		panic("Нет данных")
+	}
+
+	percent := float64(count) / float64(len(result)) * 100
+	Resp := Response{
+		Percent: percent,
+		Fails:   failArray,
+	}
+	request, err := json.Marshal(Resp)
 	panicIfError(err)
 	return request
 }
